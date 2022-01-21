@@ -1,5 +1,6 @@
 # This is a Python script.
 import requests
+import json
 from jsonschema import validate
 
 # API URL
@@ -25,6 +26,15 @@ def test_check_content_type(p_response):
     assert p_response.headers["Content-Type"] == "application/json; charset=utf-8"
 
 
+def test_schema(p_response):
+    validate(instance=p_response, schema=SCHEMA)
+
+
+def test_band_key(p_keys):
+    for k in p_keys:
+        assert k in ('name', 'recordLabel')
+
+
 def test_request_url():
     """ Function to test url and process response output"""
     response = requests.get(BASE_URL)
@@ -44,14 +54,17 @@ def test_request_url():
     # Get API response
     response_data = response.json()
 
-    # Validate will raise an exception if response json is not what is described in schema above.
-    validate(instance=response_data, schema=SCHEMA)
+    # Validate schema
+    test_schema(response_data)
 
     # Iterate over response data and display values
     for fest in response_data:
         print(f"Festival Name: {fest.get('name', 'No Festival')}")
+        validate(instance=fest, schema=SCHEMA)
+
         for band in fest.get('bands'):
-            print(f"Band Name: {band.get('name')}")
+            test_band_key(band.keys())
+            print(f"Band Name: {band['name']}")
             print(f"Record Label Name: {band.get('recordLabel')}")
         print('###########################')
 
